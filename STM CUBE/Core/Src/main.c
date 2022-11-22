@@ -22,7 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "task.h"
+#include "scheduler.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -56,82 +57,6 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-typedef struct{
-	// Pointer to the task (must be a ’ void ( void ) ’ function )
-	void(*pTask)(void);
-	// Delay (ticks) until the function will (next) be run
-	uint32_t Delay;
-	// Interval (ticks) between subsequent runs .
-	uint32_t Period;
-	// Incremented (by scheduler) when task i s due to execute
-	uint8_t RunMe;
-	//This i s a hin t to solve the question below .
-	uint32_t TaskID ;
-} sTask ;
-
-	// MUST BE ADJUSTED FOR EACH NEW PROJECT
-#define SCH_MAX_TASKS 1
-#define NO_TASK_ID 0
-sTask SCH_tasks_G[SCH_MAX_TASKS];
-unsigned char current_index_task = 0;
-unsigned char current_count_task = 0;
-
-
-unsigned char SCH_Delete_Task(const unsigned char TASK_INDEX){
-	unsigned char Return_code ;
-	SCH_tasks_G [TASK_INDEX].pTask = 0x0000 ;
-	SCH_tasks_G [TASK_INDEX].Delay = 0;
-	SCH_tasks_G [TASK_INDEX].Period = 0;
-	SCH_tasks_G [TASK_INDEX].RunMe = 0;
-	current_index_task --;
-	current_count_task --;
-	return Return_code ; // return status
-}
-void SCH_Init(void){
-	unsigned char i ;
-	for(i = 0; i < SCH_MAX_TASKS; i++){
-		SCH_Delete_Task(i);
-	}
-}
-void SCH_Add_Task ( void (*pFunction)() , uint32_t DELAY, uint32_t PERIOD){
-//	unsigned char current_index_task = 0;
-	if(current_index_task < SCH_MAX_TASKS){
-		current_count_task ++;
-		SCH_tasks_G[current_index_task].pTask = pFunction;
-		SCH_tasks_G[current_index_task].Delay = DELAY;
-		SCH_tasks_G[current_index_task].Period =  PERIOD;
-		SCH_tasks_G[current_index_task].RunMe = 0;
-
-		SCH_tasks_G[current_index_task].TaskID = current_index_task;
-
-
-		current_index_task++;
-	}
-}
-
-void SCH_Update(void){
-	for(int i = 0; i < current_count_task; i++){
-		if (SCH_tasks_G[i].Delay > 0){
-			SCH_tasks_G[i].Delay --;
-		}else{
-			SCH_tasks_G[i].Delay = SCH_tasks_G[i].Period;
-			SCH_tasks_G[i].RunMe += 1;
-		}
-	}
-}
-
-void SCH_Dispatch_Tasks(void){
-	for(int i = 0; i < current_count_task; i++){
-		if(SCH_tasks_G[i].RunMe > 0){
-			SCH_tasks_G[i].RunMe--;
-			(*SCH_tasks_G[i].pTask)();
-		}
-	}
-}
-
-void led1test(){
-	HAL_GPIO_TogglePin(RED_LED_GPIO_Port, RED_LED_Pin);
-}
 
 /* USER CODE END 0 */
 
@@ -166,13 +91,19 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Start_IT(& htim2 );
+  HAL_TIM_Base_Start_IT(& htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-//  SCH_Init();
-  SCH_Add_Task(led1test, 0, 100);
+  SCH_Init();
+
+  SCH_Add_Task(blink_led1, 3, 50);//tasks running periodically in 0.5 second
+  SCH_Add_Task(blink_led2, 5, 100);//tasks running periodically in 1 second
+  SCH_Add_Task(blink_led3, 10, 150);//tasks running periodically in 1.5 second
+  SCH_Add_Task(blink_led4, 15, 200);//tasks running periodically in 2 second
+
+  SCH_Add_Task(blink_led5, 300, 50);// one-shot task
   while (1)
   {
     /* USER CODE END WHILE */
@@ -276,18 +207,22 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(RED_LED_GPIO_Port, RED_LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin
+                          |LED5_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : RED_LED_Pin */
-  GPIO_InitStruct.Pin = RED_LED_Pin;
+  /*Configure GPIO pins : LED1_Pin LED2_Pin LED3_Pin LED4_Pin
+                           LED5_Pin */
+  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin
+                          |LED5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(RED_LED_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 }
 
 /* USER CODE BEGIN 4 */
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef * htim)
 {
 	SCH_Update();

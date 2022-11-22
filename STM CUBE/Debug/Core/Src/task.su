@@ -1,0 +1,5 @@
+task.c:10:6:blink_led1	8	static
+task.c:14:6:blink_led2	8	static
+task.c:18:6:blink_led3	8	static
+task.c:22:6:blink_led4	8	static
+task.c:27:6:blink_led5	8	static
