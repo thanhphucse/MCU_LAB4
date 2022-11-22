@@ -1,0 +1,12 @@
+main.c:80:15:SCH_Delete_Task	24	static
+main.c:90:6:SCH_Init	16	static
+main.c:96:6:SCH_Add_Task	24	static
+main.c:112:6:SCH_Update	16	static
+main.c:123:6:SCH_Dispatch_Tasks	16	static
+main.c:132:6:led1test	8	static
+main.c:142:5:main	8	static
+main.c:190:6:SystemClock_Config	72	static
+main.c:226:13:MX_TIM2_Init	32	static
+main.c:271:13:MX_GPIO_Init	32	static
+main.c:291:6:HAL_TIM_PeriodElapsedCallback	16	static
+main.c:302:6:Error_Handler	4	static,ignoring_inline_asm
